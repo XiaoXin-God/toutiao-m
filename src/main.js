@@ -3,6 +3,16 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import '@/styles/index.less'
+
+// 引入vant组件库
+import Vant from 'vant'
+// 引入vant样式
+import 'vant/lib/index.css'
+// 全局注册vant中的组件
+
+// 自动设置rem基准值，HTML默认标签大小
+import 'amfe-flexible'
+Vue.use(Vant)
 Vue.config.productionTip = false
 
 new Vue({
