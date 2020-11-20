@@ -8,8 +8,7 @@
         plain
         round
         @click="isEdit = !isEdit"
-        >{{ isEdit ? "完成" : "编辑" }}</van-button
-      >
+      >{{ isEdit ? "完成" : "编辑" }}</van-button>
     </van-cell>
     <van-grid :gutter="10">
       <van-grid-item
@@ -19,13 +18,14 @@
         v-for="(item, index) in userChannels"
         :key="index"
         :text="item.name"
-        @click="onUserChannelClick(index)"
+        @click="onUserChannelClick(item,index)"
       />
     </van-grid>
 
     <van-cell center :border="false">
       <div slot="title" class="channel-title">频道列表</div>
     </van-cell>
+
     <van-grid :gutter="10">
       <van-grid-item
         class="grid-item"
@@ -38,7 +38,7 @@
   </div>
 </template>
 <script>
-import { getAllChannels, addUserChannel } from "@/api/channel";
+import { getAllChannels, addUserChannel, deleteUserChannel } from "@/api/channel";
 import { mapState } from "vuex";
 import { setItem } from "@/utils/storage";
 export default {
@@ -58,7 +58,7 @@ export default {
     return {
       // 获取所有频道数据
       allChannels: [],
-      isEdit: false, //控制我的频道图标显示隐藏
+      isEdit: false, //控制频道的编辑删除
       activeIndex: 0,
     };
   },
@@ -87,6 +87,8 @@ export default {
 
     async onAdd(channel) {
       this.userChannels.push(channel);
+
+      // 获取到vuex中用户的信息，根据获取的信息判断用户是否登录
       if (this.user) {
         // 登录了  数据储存到线上
         await addUserChannel({
@@ -99,27 +101,30 @@ export default {
       }
     },
 
-    onUserChannelClick(index) {
+    onUserChannelClick(channel, index) {
       if (this.isEdit && index !== 0) {
-        this.deleteChannel(index);
+        this.deleteChannel(channel, index);
       } else {
         this.switchChannel(index);
       }
     },
 
-    deleteChannel(index) {
-      this.$emit("update-active", this.active - 1);
+    async deleteChannel(channel, index) {
+      if (index <= this.active){
+        this.$emit("update-active", this.active - 1);
+      } 
       this.userChannels.splice(index, 1);
 
       if (this.user) {
         // 登录状态下
+        await deleteUserChannel(channel.id)
       } else {
-        // 退出登录状态下
-        setItem("user-channles",this.userChannels)
+        // 退出登录状态下,持久化数据到本地
+        setItem("user-channles", this.userChannels);
       }
     },
     switchChannel(index) {
-      this.activeIndex = index;
+      // this.activeIndex = index;
       this.$emit("update-active", index);
       this.$emit("close");
     },
